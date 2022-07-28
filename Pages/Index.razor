@@ -93,8 +93,6 @@ else
                     await new HttpClient() {Timeout = TimeSpan.FromMilliseconds(2500)}.SendAsync(httpRequestMessage);
                     sp.Stop();
                     item.Time = (int) sp.ElapsedMilliseconds;
-                
-                    StateHasChanged();
                 }
                 catch (Exception)
                 {
@@ -105,8 +103,6 @@ else
                         await new HttpClient() {Timeout = TimeSpan.FromMilliseconds(2500)}.SendAsync(httpRequestMessage);
                         sp.Stop();
                         item.Time = (int) sp.ElapsedMilliseconds;
-                
-                        StateHasChanged();
                     }
                     catch (Exception e)
                     {
@@ -116,6 +112,7 @@ else
                 }
 
                 dohItems = dohItems.OrderBy(a => a.Time).ToList();
+                StateHasChanged();
             }
         }
     }
