@@ -1,0 +1,128 @@
+﻿@page "/"
+@using System.Diagnostics
+@inject HttpClient Http
+
+<PageTitle>ArashiDNS.Hakado | Mili.ONE Network</PageTitle>
+
+<h1>ArashiDNS.Hakado</h1>
+
+<p>DNS over HTTPS server latency testing tool.</p>
+
+
+@if (dohItems.Count == 0)
+{
+    <p><em>Loading...</em></p>
+}
+else
+{
+    <table class="table">
+        <thead>
+            <tr>
+                <th>Name</th>
+                <th>URL</th>
+                <th>Latency</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var item in dohItems)
+            {
+                <tr>
+                    <td>@item.Name</td>
+                    <td>@item.URL</td>
+                    @switch (item.Time)
+                    {
+                        case <= 0:
+                            <td style="color: FireBrick">Timeout</td>
+                            break;
+                        case > 1000:
+                            <td style="color: Crimson">@item.Time ms</td>
+                            break;
+                        case > 500:
+                            <td style="color: Tomato">@item.Time ms</td>
+                            break;
+                        case > 250:
+                            <td style="color: orange">@item.Time ms</td>
+                            break;
+                        case > 150:
+                            <td style="color: yellowgreen">@item.Time ms</td>
+                            break;
+                        case <= 150:
+                            <td style="color: green">@item.Time ms</td>
+                            break;
+                        default:
+                            <td >@item.Time</td>
+                            break;
+                    }
+                </tr>
+            }
+        </tbody>
+    </table>
+}
+
+@code {
+    private List<DohItem> dohItems = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        var list = await Http.GetStringAsync("https://gh.mili.one/github.com/mili-tan/AuroraDNS.GUI/blob/master/List/DoH.list");
+        foreach (var item in list.Split(Environment.NewLine))
+        {
+            var i = item.Split(",");
+            dohItems.Add(new DohItem {Name = i.LastOrDefault(), URL = i.FirstOrDefault()});
+        }
+        StateHasChanged();
+
+        while (true)
+        {
+            foreach (var item in dohItems)
+            {
+                if (item.URL == null || string.IsNullOrWhiteSpace(item.URL)) continue;
+                var httpRequestMessage = new HttpRequestMessage
+                {
+                    RequestUri = new Uri(item.URL.TrimEnd() + "?dns=AAABAAABAAAAAAAAA3d3dwdleGFtcGxlA2NvbQAAAQAB"),
+                    Method = HttpMethod.Get,
+                };
+                httpRequestMessage.SetBrowserRequestMode(BrowserRequestMode.NoCors);
+                httpRequestMessage.SetBrowserRequestCache(BrowserRequestCache.NoCache);
+
+                try
+                {
+                    var sp = new Stopwatch();
+                    sp.Start();
+                    await new HttpClient() {Timeout = TimeSpan.FromMilliseconds(2000)}.SendAsync(httpRequestMessage);
+                    sp.Stop();
+                    item.Time = (int) sp.ElapsedMilliseconds;
+                
+                    StateHasChanged();
+                }
+                catch (Exception)
+                {
+                    try
+                    {
+                        var sp = new Stopwatch();
+                        sp.Start();
+                        await new HttpClient() {Timeout = TimeSpan.FromMilliseconds(2000)}.SendAsync(httpRequestMessage);
+                        sp.Stop();
+                        item.Time = (int) sp.ElapsedMilliseconds;
+                
+                        StateHasChanged();
+                    }
+                    catch (Exception e)
+                    {
+                        Console.WriteLine(e);
+                        item.Time = 0;
+                    }
+                }
+            }
+        }
+    }
+
+    public class DohItem
+    {
+        public string? URL { get; set; }
+
+        public string? Name { get; set; }
+
+        public int? Time { get; set; }
+    }
+}
