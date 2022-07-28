@@ -4,10 +4,6 @@
 
 <PageTitle>ArashiDNS.Hakado | Mili.ONE Network</PageTitle>
 
-<h1>ArashiDNS.Hakado</h1>
-
-<p>DNS over HTTPS server latency testing tool.</p>
-
 
 @if (dohItems.Count == 0)
 {
@@ -31,7 +27,10 @@ else
                     <td>@item.URL</td>
                     @switch (item.Time)
                     {
-                        case <= 0:
+                        case >= 5000:
+                            <td>Waiting</td>
+                            break;
+                        case > 2000:
                             <td style="color: FireBrick">Timeout</td>
                             break;
                         case > 1000:
@@ -67,8 +66,10 @@ else
         var list = await Http.GetStringAsync("https://gh.mili.one/github.com/mili-tan/AuroraDNS.GUI/blob/master/List/DoH.list");
         foreach (var item in list.Split(Environment.NewLine))
         {
+            if (string.IsNullOrWhiteSpace(item)) continue;
+
             var i = item.Split(",");
-            dohItems.Add(new DohItem {Name = i.LastOrDefault(), URL = i.FirstOrDefault()});
+            dohItems.Add(new DohItem {Name = i.LastOrDefault(), URL = i.FirstOrDefault(),Time = 5000});
         }
         StateHasChanged();
 
@@ -89,7 +90,7 @@ else
                 {
                     var sp = new Stopwatch();
                     sp.Start();
-                    await new HttpClient() {Timeout = TimeSpan.FromMilliseconds(2000)}.SendAsync(httpRequestMessage);
+                    await new HttpClient() {Timeout = TimeSpan.FromMilliseconds(2500)}.SendAsync(httpRequestMessage);
                     sp.Stop();
                     item.Time = (int) sp.ElapsedMilliseconds;
                 
@@ -101,7 +102,7 @@ else
                     {
                         var sp = new Stopwatch();
                         sp.Start();
-                        await new HttpClient() {Timeout = TimeSpan.FromMilliseconds(2000)}.SendAsync(httpRequestMessage);
+                        await new HttpClient() {Timeout = TimeSpan.FromMilliseconds(2500)}.SendAsync(httpRequestMessage);
                         sp.Stop();
                         item.Time = (int) sp.ElapsedMilliseconds;
                 
@@ -110,9 +111,11 @@ else
                     catch (Exception e)
                     {
                         Console.WriteLine(e);
-                        item.Time = 0;
+                        item.Time = 2500;
                     }
                 }
+
+                dohItems = dohItems.OrderBy(a => a.Time).ToList();
             }
         }
     }

@@ -1,16 +1,15 @@
 ﻿@inherits LayoutComponentBase
 
 <div class="page">
-    <div class="sidebar">
-        <NavMenu />
-    </div>
 
     <main>
-        <div class="top-row px-4">
-            <a href="https://docs.microsoft.com/aspnet/" target="_blank">About</a>
-        </div>
+        <nav class="navbar navbar-expand-lg navbar-light bg-light">
+            <div class="container-fluid m-2">
+                <a class="navbar-brand" href="#">ArashiDNS.Hakado</a>
+            </div>
+        </nav>
 
-        <article class="content px-4">
+        <article class="content p-4 ">
             @Body
         </article>
     </main>
