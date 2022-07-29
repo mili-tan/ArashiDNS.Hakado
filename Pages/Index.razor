@@ -69,7 +69,7 @@ else
             if (string.IsNullOrWhiteSpace(item)) continue;
 
             var i = item.Split(",");
-            dohItems.Add(new DohItem {Name = i.LastOrDefault(), URL = i.FirstOrDefault(),Time = 5000});
+            dohItems.Add(new DohItem {Name = i.LastOrDefault(), URL = i.FirstOrDefault(), Time = 5000});
         }
         StateHasChanged();
 
@@ -88,27 +88,15 @@ else
 
                 try
                 {
-                    var sp = new Stopwatch();
-                    sp.Start();
+                    var sp = Stopwatch.StartNew();
                     await new HttpClient() {Timeout = TimeSpan.FromMilliseconds(2500)}.SendAsync(httpRequestMessage);
                     sp.Stop();
                     item.Time = (int) sp.ElapsedMilliseconds;
                 }
-                catch (Exception)
+                catch (Exception e)
                 {
-                    try
-                    {
-                        var sp = new Stopwatch();
-                        sp.Start();
-                        await new HttpClient() {Timeout = TimeSpan.FromMilliseconds(2500)}.SendAsync(httpRequestMessage);
-                        sp.Stop();
-                        item.Time = (int) sp.ElapsedMilliseconds;
-                    }
-                    catch (Exception e)
-                    {
-                        Console.WriteLine(e);
-                        item.Time = 2500;
-                    }
+                    Console.WriteLine(e);
+                    item.Time = 2500;
                 }
 
                 dohItems = dohItems.OrderBy(a => a.Time).ToList();
