@@ -73,6 +73,18 @@ else
         }
         StateHasChanged();
 
+        Parallel.ForEach(dohItems, async i =>
+        {
+            var httpRequestMessage = new HttpRequestMessage
+            {
+                RequestUri = new Uri("https://" + i.URL?.TrimEnd()),
+                Method = HttpMethod.Get,
+            };
+            httpRequestMessage.SetBrowserRequestMode(BrowserRequestMode.NoCors);
+            httpRequestMessage.SetBrowserRequestCache(BrowserRequestCache.NoCache);
+            await new HttpClient() {Timeout = TimeSpan.FromMilliseconds(1000)}.SendAsync(httpRequestMessage);
+        });
+
         while (true)
         {
             foreach (var item in dohItems)
